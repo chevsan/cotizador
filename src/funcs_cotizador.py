@@ -22,12 +22,12 @@ def data_cleaning_valset(df):
     '''Esta funcion se usa para las simulaciones.'''
     # parametros
     path_save = '../datos/'
-    dolar_blue = 206  # actualizado al 1/03 
-    dolar_oficial = 114.18
+    dolar_blue = 197  # actualizado al 04/19 
+    dolar_oficial = 119.28
     
     old_shape = df.shape[0]
     ### 0) Nulos ###
-    df = df.dropna()
+    df = df.dropna(subset=['car_year','car_kms','match_marca_a','match_modelo_a','match_v1_a','Subseg_a', 'Seg_a'])
     print(f'Hey! {old_shape - df.shape[0]} were removed due to null values')
     old_shape = df.shape[0]
     
@@ -154,6 +154,7 @@ def data_cleaning_valset(df):
     
     # cuando hice el tratamiento de 1111 y 99999 había pasado la feature de kms a int. Volvemos a pasar a float por el catboost
     #df['car_kms'] = df['car_kms'].astype('float') # lo hacemos en la prox func de procesamiento
+    df['car_year'] = df['car_year'].astype('int')
     
     id_features = ['runtime','car_id']
     model_features = ['car_year','car_kms','match_marca_a','match_modelo_a','match_v1_a','Subseg_a', 'Seg_a', 'price_meli_ok']
@@ -183,30 +184,33 @@ def data_processing_1(df, path_data):
             
             modelo_año = m + '_' + str(a)
             
-            if str(price_thresh_outliers[modelo_año][0]) == 'nan':
+            if a == 2008:
                 pass
             else:
-                # kms
-                mask1 = df.match_modelo_a == m
-                mask2 = df.car_year == a
-                data = df[mask1 & mask2].copy()
+                if (str(price_thresh_outliers[modelo_año][0]) == 'nan'):
+                    pass
+                else:
+                    # kms
+                    mask1 = df.match_modelo_a == m
+                    mask2 = df.car_year == a
+                    data = df[mask1 & mask2].copy()
 
-                filt_mask_sup = data.car_kms>kms_thresh_outliers[modelo_año][1]
-                filt_mask_inf = data.car_kms<kms_thresh_outliers[modelo_año][0]
-                data = data[~(filt_mask_sup | filt_mask_inf)]
-                df = df.loc[~(mask1 & mask2),:]
-                df = pd.concat([df,data],0)
+                    filt_mask_sup = data.car_kms>kms_thresh_outliers[modelo_año][1]
+                    filt_mask_inf = data.car_kms<kms_thresh_outliers[modelo_año][0]
+                    data = data[~(filt_mask_sup | filt_mask_inf)]
+                    df = df.loc[~(mask1 & mask2),:]
+                    df = pd.concat([df,data],0)
 
-                # price
-                mask1 = df.match_modelo_a == m
-                mask2 = df.car_year == a
-                data = df[mask1 & mask2].copy()
+                    # price
+                    mask1 = df.match_modelo_a == m
+                    mask2 = df.car_year == a
+                    data = df[mask1 & mask2].copy()
 
-                filt_mask_sup = data.price_meli_ok>price_thresh_outliers[modelo_año][1]
-                filt_mask_inf = data.price_meli_ok<price_thresh_outliers[modelo_año][0]
-                data = data[~(filt_mask_sup | filt_mask_inf)]
-                df = df.loc[~(mask1 & mask2),:]
-                df = pd.concat([df,data],0)
+                    filt_mask_sup = data.price_meli_ok>price_thresh_outliers[modelo_año][1]
+                    filt_mask_inf = data.price_meli_ok<price_thresh_outliers[modelo_año][0]
+                    data = data[~(filt_mask_sup | filt_mask_inf)]
+                    df = df.loc[~(mask1 & mask2),:]
+                    df = pd.concat([df,data],0)
     
     # probamos tanto usando year como int y como float y la perfo del modelo dio apenas mejor con year en float
     df['car_year'] = df['car_year'].astype('float')
