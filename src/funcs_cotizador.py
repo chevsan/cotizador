@@ -26,6 +26,12 @@ def data_cleaning_valset(df):
     dolar_oficial = 114.18
     
     old_shape = df.shape[0]
+    ### 0) Nulos ###
+    df = df.dropna()
+    print(f'Hey! {old_shape - df.shape[0]} were removed due to null values')
+    old_shape = df.shape[0]
+    
+    old_shape = df.shape[0]
     ### 1) Duplicados ###
     # tratamiento de la feautre "runtime"
     df['runtime'] = pd.to_datetime(df.runtime.apply(lambda x: str(x)[:19]))
@@ -147,7 +153,7 @@ def data_cleaning_valset(df):
     old_shape = df.shape[0]
     
     # cuando hice el tratamiento de 1111 y 99999 había pasado la feature de kms a int. Volvemos a pasar a float por el catboost
-    df['car_kms'] = df['car_kms'].astype('float')
+    #df['car_kms'] = df['car_kms'].astype('float') # lo hacemos en la prox func de procesamiento
     
     id_features = ['runtime','car_id']
     model_features = ['car_year','car_kms','match_marca_a','match_modelo_a','match_v1_a','Subseg_a', 'Seg_a', 'price_meli_ok']
